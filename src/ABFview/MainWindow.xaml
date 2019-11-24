@@ -80,20 +80,6 @@
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Name="gbSweepMeasure" Header="Sweep Measure">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox x:Name="cbMeasure" IsEnabled="False" VerticalAlignment="Center" Checked="cbMeasure_Checked" Unchecked="cbMeasure_Unhecked">measure</CheckBox>
-                    <ComboBox Name="cbMeasurement">
-                        <ComboBoxItem IsSelected="True">mean</ComboBoxItem>
-                        <ComboBoxItem>area</ComboBoxItem>
-                        <ComboBoxItem>minimum</ComboBoxItem>
-                        <ComboBoxItem>maximum</ComboBoxItem>
-                    </ComboBox>
-                    <CheckBox x:Name="cbBaseline" VerticalAlignment="Center" Checked="cbBaseline_Checked" Unchecked="cbBaseline_Unchecked">baseline</CheckBox>
-                    <Button x:Name="btnMeasure" Content="🔍" ToolTip="measure" Click="btnMeasure_Click"/>
-                </StackPanel>
-            </GroupBox>
-
             <GroupBox Name="gbStackSettings" Header="Stack Settings">
                 <StackPanel Orientation="Horizontal">
                     <Label VerticalAlignment="Center" Content="separation:" />

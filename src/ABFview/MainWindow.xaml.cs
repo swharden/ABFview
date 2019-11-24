@@ -32,7 +32,6 @@ namespace ABFview
                 throw new Exception("Must build as 32-bit (x86)");
 
             gbSweepNav.Visibility = Visibility.Collapsed;
-            gbSweepMeasure.Visibility = Visibility.Collapsed;
             gbStackSettings.Visibility = Visibility.Collapsed;
             gbView.Visibility = Visibility.Collapsed;
             btnNextAbf.Visibility = Visibility.Collapsed;
@@ -64,45 +63,15 @@ namespace ABFview
             gbView.Visibility = Visibility.Visible;
             btnNextAbf.Visibility = Visibility.Visible;
             btnPreviousAbf.Visibility = Visibility.Visible;
-
-            cbMeasure_Unhecked(null, null);
-        }
-
-        private double[] Diff(double[] source, int deltaPoints = 1)
-        {
-            double[] deriv = new double[source.Length];
-            for (int i = deltaPoints; i < source.Length; i++)
-                deriv[i] = source[i] - source[i - deltaPoints];
-            for (int i = 0; i < deltaPoints; i++)
-                deriv[i] = deriv[deltaPoints];
-            return deriv;
         }
 
         int currentSweep = 0;
+
         private void SetSweep(int sweepNumber = 1)
         {
             currentSweep = sweepNumber;
-
-            var sweep = abf.GetSweep((int)sweepNumber);
-
-            wpfPlot1.plt.Clear();
-            wpfPlot1.plt.Title($"Sweep {sweepNumber + 1} of {abf.info.sweepCount}");
-
-            if (cbDerivative.IsChecked == false)
-            {
-                wpfPlot1.plt.PlotSignal(sweep.values, abf.info.sampleRate, color: System.Drawing.Color.Blue);
-                wpfPlot1.plt.YLabel("Membrane Potential (mV)");
-            }
-            else
-            {
-                wpfPlot1.plt.PlotSignal(Diff(sweep.values), abf.info.sampleRate, color: System.Drawing.Color.Red);
-                wpfPlot1.plt.YLabel("Voltage Derivative (mV/ms)");
-            }
-
-            wpfPlot1.plt.XLabel("Sweep Time (seconds)");
-            wpfPlot1.plt.AxisAuto(0, .1);
+            EphysPlot.Sweep(wpfPlot1.plt, abf, sweepNumber, (bool)cbDerivative.IsChecked);
             wpfPlot1.Render();
-
             lblSweep.Content = $"{sweepNumber + 1} of {abf.info.sweepCount}";
         }
 
@@ -111,51 +80,13 @@ namespace ABFview
             if (!double.TryParse(tbVertSep.Text, out double yOffset))
                 yOffset = 0;
 
-            wpfPlot1.plt.Clear();
-            wpfPlot1.plt.Title($"Stacked Sweeps");
-
-            if (cbDerivative.IsChecked == true)
-            {
-                for (int i = 0; i < abf.info.sweepCount; i++)
-                {
-                    var sweep = abf.GetSweep(i);
-                    wpfPlot1.plt.PlotSignal(Diff(sweep.valuesCopy), abf.info.sampleRate, color: System.Drawing.Color.Red, yOffset: i * yOffset);
-                }
-                wpfPlot1.plt.YLabel("Membrane Potential (mV)");
-            }
-            else
-            {
-                for (int i = 0; i < abf.info.sweepCount; i++)
-                {
-                    var sweep = abf.GetSweep(i);
-                    wpfPlot1.plt.PlotSignal(sweep.valuesCopy, abf.info.sampleRate, color: System.Drawing.Color.Blue, yOffset: i * yOffset);
-                }
-            }
-
-            wpfPlot1.plt.XLabel("Sweep Time (seconds)");
-            wpfPlot1.plt.AxisAuto(0, .1);
+            EphysPlot.Stack(wpfPlot1.plt, abf, yOffset, (bool)cbDerivative.IsChecked);
             wpfPlot1.Render();
         }
 
         private void SetFull()
         {
-            wpfPlot1.plt.Clear();
-
-            if (cbDerivative.IsChecked == false)
-            {
-                wpfPlot1.plt.PlotSignal(abf.GetFullRecording(), abf.info.sampleRate * 60, color: System.Drawing.Color.Blue);
-                wpfPlot1.plt.YLabel("Membrane Potential (mV)");
-                wpfPlot1.plt.XLabel("Experiment Time (Minutes)");
-            }
-            else
-            {
-                wpfPlot1.plt.PlotSignal(Diff(abf.GetFullRecording()), abf.info.sampleRate * 60, color: System.Drawing.Color.Red);
-                wpfPlot1.plt.YLabel("Voltage Derivative (mV/ms)");
-                wpfPlot1.plt.XLabel("Experiment Time (Minutes)");
-            }
-
-            wpfPlot1.plt.Title($"Full Recording");
-            wpfPlot1.plt.AxisAuto(0, .1);
+            EphysPlot.Full(wpfPlot1.plt, abf, (bool)cbDerivative.IsChecked);
             wpfPlot1.Render();
         }
 
@@ -198,7 +129,6 @@ namespace ABFview
 
             // start by hiding all custom panels
             gbSweepNav.Visibility = Visibility.Collapsed;
-            gbSweepMeasure.Visibility = Visibility.Collapsed;
             gbStackSettings.Visibility = Visibility.Collapsed;
 
             // reveal relevant panels only
@@ -207,7 +137,6 @@ namespace ABFview
                 case "sweep":
                     SetSweep();
                     gbSweepNav.Visibility = Visibility.Visible;
-                    gbSweepMeasure.Visibility = Visibility.Visible;
                     break;
 
                 case "stack":
@@ -283,46 +212,6 @@ namespace ABFview
             string nextAbf = GetPathAdjacentAbf(abf.info.filePath, nextAbf: true);
             if (nextAbf != null)
                 LoadAbf(nextAbf);
-        }
-
-        private void cbMeasure_Checked(object sender, RoutedEventArgs e)
-        {
-            cbBaseline.Visibility = Visibility.Visible;
-            cbMeasurement.Visibility = Visibility.Visible;
-            btnMeasure.Visibility = Visibility.Visible;
-
-            wpfPlot1.plt.Clear(signalPlots: false);
-            wpfPlot1.plt.PlotVLine(.5, System.Drawing.Color.Black, lineWidth: 2, draggable: true);
-            wpfPlot1.plt.PlotVLine(.6, System.Drawing.Color.Black, lineWidth: 2, draggable: true);
-            wpfPlot1.Render();
-        }
-
-        private void cbMeasure_Unhecked(object sender, RoutedEventArgs e)
-        {
-            cbBaseline.Visibility = Visibility.Collapsed;
-            cbMeasurement.Visibility = Visibility.Collapsed;
-            btnMeasure.Visibility = Visibility.Collapsed;
-
-            cbBaseline.IsChecked = false;
-            wpfPlot1.plt.Clear(signalPlots: false);
-            wpfPlot1.Render();
-        }
-
-        private void cbBaseline_Checked(object sender, RoutedEventArgs e)
-        {
-            wpfPlot1.plt.PlotVLine(.1, System.Drawing.Color.Gray, lineWidth: 2, draggable: true);
-            wpfPlot1.plt.PlotVLine(.2, System.Drawing.Color.Gray, lineWidth: 2, draggable: true);
-            wpfPlot1.Render();
-        }
-
-        private void cbBaseline_Unchecked(object sender, RoutedEventArgs e)
-        {
-            cbMeasure_Checked(null, null);
-        }
-
-        private void btnMeasure_Click(object sender, RoutedEventArgs e)
-        {
-            Debug.WriteLine("perform measurement");
         }
 
         private void OnDrop(object sender, DragEventArgs e)
