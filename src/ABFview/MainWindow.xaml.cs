@@ -53,7 +53,6 @@ namespace ABFview
             if (abf != null)
             {
                 Debug.WriteLine($"Closing old ABF...");
-                abf.Close();
             }
 
             Debug.WriteLine($"Loading ABF: {filePath}");
@@ -79,24 +78,24 @@ namespace ABFview
             return deriv;
         }
 
-        private void SetSweep(int? sweepNumber = null)
+        int currentSweep = 0;
+        private void SetSweep(int sweepNumber = 1)
         {
-            if (sweepNumber is null)
-                sweepNumber = abf.sweep.number;
+            currentSweep = sweepNumber;
 
-            abf.SetSweep((int)sweepNumber);
+            var sweep = abf.GetSweep((int)sweepNumber);
 
             wpfPlot1.plt.Clear();
             wpfPlot1.plt.Title($"Sweep {sweepNumber + 1} of {abf.info.sweepCount}");
 
             if (cbDerivative.IsChecked == false)
             {
-                wpfPlot1.plt.PlotSignal(abf.sweep.values, abf.info.sampleRate, color: System.Drawing.Color.Blue);
+                wpfPlot1.plt.PlotSignal(sweep.values, abf.info.sampleRate, color: System.Drawing.Color.Blue);
                 wpfPlot1.plt.YLabel("Membrane Potential (mV)");
             }
             else
             {
-                wpfPlot1.plt.PlotSignal(Diff(abf.sweep.values), abf.info.sampleRate, color: System.Drawing.Color.Red);
+                wpfPlot1.plt.PlotSignal(Diff(sweep.values), abf.info.sampleRate, color: System.Drawing.Color.Red);
                 wpfPlot1.plt.YLabel("Voltage Derivative (mV/ms)");
             }
 
@@ -119,8 +118,8 @@ namespace ABFview
             {
                 for (int i = 0; i < abf.info.sweepCount; i++)
                 {
-                    abf.SetSweep(i);
-                    wpfPlot1.plt.PlotSignal(Diff(abf.sweep.valuesCopy), abf.info.sampleRate, color: System.Drawing.Color.Red, yOffset: i * yOffset);
+                    var sweep = abf.GetSweep(i);
+                    wpfPlot1.plt.PlotSignal(Diff(sweep.valuesCopy), abf.info.sampleRate, color: System.Drawing.Color.Red, yOffset: i * yOffset);
                 }
                 wpfPlot1.plt.YLabel("Membrane Potential (mV)");
             }
@@ -128,8 +127,8 @@ namespace ABFview
             {
                 for (int i = 0; i < abf.info.sweepCount; i++)
                 {
-                    abf.SetSweep(i);
-                    wpfPlot1.plt.PlotSignal(abf.sweep.valuesCopy, abf.info.sampleRate, color: System.Drawing.Color.Blue, yOffset: i * yOffset);
+                    var sweep = abf.GetSweep(i);
+                    wpfPlot1.plt.PlotSignal(sweep.valuesCopy, abf.info.sampleRate, color: System.Drawing.Color.Blue, yOffset: i * yOffset);
                 }
             }
 
@@ -162,12 +161,12 @@ namespace ABFview
 
         private void btnSweepPrevious_Click(object sender, RoutedEventArgs e)
         {
-            SetSweep(Math.Max(0, abf.sweep.number - 1));
+            SetSweep(Math.Max(0, currentSweep - 1));
         }
 
         private void btnSweepNext_Click(object sender, RoutedEventArgs e)
         {
-            SetSweep(Math.Min(abf.info.sweepCount - 1, abf.sweep.number + 1));
+            SetSweep(Math.Min(abf.info.sweepCount - 1, currentSweep + 1));
         }
 
         private void btnSweepFirst_Click(object sender, RoutedEventArgs e)
