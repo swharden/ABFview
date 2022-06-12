@@ -1,56 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
+using System.Linq;
 
 namespace ABFview
 {
-    /* This class creates ScottPlots to display ABF data */
-
     public static class EphysPlot
     {
-
-        public static void Sweep(ScottPlot.Plot plt, ABFsharp.ABF abf, int sweepNumber, bool derivative)
+        public static void Sweep(ScottPlot.Plot plt, AbfSharp.ABF abf, int sweepNumber, bool derivative)
         {
             plt.Clear();
 
-            if (!derivative)
-            {
-                var sweep = abf.GetSweep((int)sweepNumber);
-                plt.PlotSignal(sweep.values, abf.info.sampleRate, color: System.Drawing.Color.Blue);
-                plt.YLabel("Membrane Potential (mV)");
-            }
-            else
-            {
-                var sweep = abf.GetSweep((int)sweepNumber);
-                plt.PlotSignal(Diff(sweep.values), abf.info.sampleRate, color: System.Drawing.Color.Red);
-                plt.YLabel("Voltage Derivative (mV/ms)");
-            }
+            plt.AddSignal(
+                ys: GetSweepValues(abf, sweepNumber, derivative),
+                sampleRate: abf.Header.SampleRate,
+                color: derivative ? Color.Red : Color.Blue);
 
-            plt.Title($"Sweep {sweepNumber + 1} of {abf.info.sweepCount}");
+            plt.Title($"Sweep {sweepNumber + 1} of {abf.Header.SweepCount}");
             plt.XLabel("Sweep Time (seconds)");
             plt.AxisAuto(0, .1);
         }
 
-        public static void Stack(ScottPlot.Plot plt, ABFsharp.ABF abf, double yOffset, bool derivative)
+        public static void Stack(ScottPlot.Plot plt, AbfSharp.ABF abf, double yOffset, bool derivative)
         {
             plt.Clear();
 
-            if (derivative)
+            for (int i = 0; i < abf.Header.SweepCount; i++)
             {
-                for (int i = 0; i < abf.info.sweepCount; i++)
-                {
-                    var sweep = abf.GetSweep(i);
-                    plt.PlotSignal(Diff(sweep.valuesCopy), abf.info.sampleRate, color: System.Drawing.Color.Red, yOffset: i * yOffset);
-                }
-                plt.YLabel("Membrane Potential (mV)");
-            }
-            else
-            {
-                for (int i = 0; i < abf.info.sweepCount; i++)
-                {
-                    var sweep = abf.GetSweep(i);
-                    plt.PlotSignal(sweep.valuesCopy, abf.info.sampleRate, color: System.Drawing.Color.Blue, yOffset: i * yOffset);
-                }
+                var sig = plt.AddSignal(
+                    ys: GetSweepValues(abf, i, derivative),
+                    sampleRate: abf.Header.SampleRate,
+                    color: derivative ? Color.Red : Color.Blue);
+
+                sig.OffsetY = i * yOffset;
             }
 
             plt.Title($"Stacked Sweeps");
@@ -58,23 +41,16 @@ namespace ABFview
             plt.AxisAuto(0, .1);
         }
 
-        public static void Full(ScottPlot.Plot plt, ABFsharp.ABF abf, bool derivative)
+        public static void Full(ScottPlot.Plot plt, AbfSharp.ABF abf, bool derivative)
         {
             plt.Clear();
 
-            if (!derivative)
-            {
-                plt.PlotSignal(abf.GetFullRecording(), abf.info.sampleRate * 60, color: System.Drawing.Color.Blue);
-                plt.YLabel("Membrane Potential (mV)");
-                plt.XLabel("Experiment Time (Minutes)");
-            }
-            else
-            {
-                plt.PlotSignal(Diff(abf.GetFullRecording()), abf.info.sampleRate * 60, color: System.Drawing.Color.Red);
-                plt.YLabel("Voltage Derivative (mV/ms)");
-                plt.XLabel("Experiment Time (Minutes)");
-            }
+            plt.AddSignal(
+                ys: GetAllSweepValues(abf, derivative),
+                abf.Header.SampleRate * 60,
+                color: derivative ? Color.Red : Color.Blue);
 
+            plt.XLabel("Sweep Time (minutes)");
             plt.Title($"Full Recording");
             plt.AxisAuto(0, .1);
         }
@@ -87,6 +63,26 @@ namespace ABFview
             for (int i = 0; i < deltaPoints; i++)
                 deriv[i] = deriv[deltaPoints];
             return deriv;
+        }
+
+        private static double[] GetSweepValues(AbfSharp.ABF abf, int sweepNumber, bool derivative)
+        {
+            float[] valuesRaw = abf.GetSweep(sweepNumber);
+            double[] values = new double[valuesRaw.Length];
+            for (int i = 0; i < valuesRaw.Length; i++)
+                values[i] = valuesRaw[i];
+            return derivative ? Diff(values) : values;
+        }
+
+        private static double[] GetAllSweepValues(AbfSharp.ABF abf, bool derivative)
+        {
+            double[][] values = new double[abf.Header.SweepCount][];
+            for (int i = 0; i < abf.Header.SweepCount; i++)
+            {
+                values[i] = GetSweepValues(abf, i, derivative);
+            }
+
+            return values.SelectMany(a => a).ToArray();
         }
     }
 }

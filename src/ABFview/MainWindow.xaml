@@ -66,7 +66,7 @@
                         <ComboBoxItem>stack</ComboBoxItem>
                         <ComboBoxItem>full</ComboBoxItem>
                     </ComboBox>
-                    <CheckBox Name="cbDerivative" VerticalAlignment="Center" Checked="cbDelta_CheckChanged" Unchecked="cbDelta_CheckChanged">dV/dt</CheckBox>
+                    <CheckBox Name="cbDerivative" VerticalAlignment="Center" Checked="cbDelta_CheckChanged" Unchecked="cbDelta_CheckChanged">dY/dt</CheckBox>
                 </StackPanel>
             </GroupBox>
 

@@ -37,13 +37,13 @@ namespace ABFview
             btnNextAbf.Visibility = Visibility.Collapsed;
             btnPreviousAbf.Visibility = Visibility.Collapsed;
 
-            wpfPlot1.plt.AxisAuto();
+            wpfPlot1.Plot.AxisAuto();
             wpfPlot1.Render();
 
             LoadAbf(demoAbfFile);
         }
 
-        ABFsharp.ABF abf;
+        AbfSharp.ABF abf;
         private void LoadAbf(string filePath)
         {
             if (!System.IO.File.Exists(filePath))
@@ -55,8 +55,8 @@ namespace ABFview
             }
 
             Debug.WriteLine($"Loading ABF: {filePath}");
-            abf = new ABFsharp.ABF(filePath);
-            Title = $"ABFview {abf.info.fileName}";
+            abf = new AbfSharp.ABF(filePath);
+            Title = $"ABFview {System.IO.Path.GetFileName(filePath)}";
             SetViewMode("sweep");
             SetSweep(0);
 
@@ -70,9 +70,9 @@ namespace ABFview
         private void SetSweep(int sweepNumber = 1)
         {
             currentSweep = sweepNumber;
-            EphysPlot.Sweep(wpfPlot1.plt, abf, sweepNumber, (bool)cbDerivative.IsChecked);
+            EphysPlot.Sweep(wpfPlot1.Plot, abf, sweepNumber, (bool)cbDerivative.IsChecked);
             wpfPlot1.Render();
-            lblSweep.Content = $"{sweepNumber + 1} of {abf.info.sweepCount}";
+            lblSweep.Content = $"{sweepNumber + 1} of {abf.Header.SweepCount}";
         }
 
         private void SetStack()
@@ -80,13 +80,13 @@ namespace ABFview
             if (!double.TryParse(tbVertSep.Text, out double yOffset))
                 yOffset = 0;
 
-            EphysPlot.Stack(wpfPlot1.plt, abf, yOffset, (bool)cbDerivative.IsChecked);
+            EphysPlot.Stack(wpfPlot1.Plot, abf, yOffset, (bool)cbDerivative.IsChecked);
             wpfPlot1.Render();
         }
 
         private void SetFull()
         {
-            EphysPlot.Full(wpfPlot1.plt, abf, (bool)cbDerivative.IsChecked);
+            EphysPlot.Full(wpfPlot1.Plot, abf, (bool)cbDerivative.IsChecked);
             wpfPlot1.Render();
         }
 
@@ -97,7 +97,7 @@ namespace ABFview
 
         private void btnSweepNext_Click(object sender, RoutedEventArgs e)
         {
-            SetSweep(Math.Min(abf.info.sweepCount - 1, currentSweep + 1));
+            SetSweep(Math.Min(abf.Header.SweepCount - 1, currentSweep + 1));
         }
 
         private void btnSweepFirst_Click(object sender, RoutedEventArgs e)
@@ -107,15 +107,15 @@ namespace ABFview
 
         private void btnSweepLast_Click(object sender, RoutedEventArgs e)
         {
-            SetSweep(abf.info.sweepCount - 1);
+            SetSweep(abf.Header.SweepCount - 1);
         }
 
         private void cbDelta_CheckChanged(object sender, RoutedEventArgs e)
         {
-            double x1 = wpfPlot1.plt.Axis()[0];
-            double x2 = wpfPlot1.plt.Axis()[1];
+            double x1 = wpfPlot1.Plot.GetAxisLimits().XMin;
+            double x2 = wpfPlot1.Plot.GetAxisLimits().XMax;
             SetViewMode();
-            wpfPlot1.plt.Axis(x1: x1, x2: x2);
+            wpfPlot1.Plot.SetAxisLimits(xMin: x1, xMax: x2);
             wpfPlot1.Render();
         }
 
@@ -202,14 +202,14 @@ namespace ABFview
 
         private void btnPreviousAbf_Click(object sender, RoutedEventArgs e)
         {
-            string previousAbf = GetPathAdjacentAbf(abf.info.filePath, nextAbf: false);
+            string previousAbf = GetPathAdjacentAbf(abf.Path, nextAbf: false);
             if (previousAbf != null)
                 LoadAbf(previousAbf);
         }
 
         private void btnNextAbf_Click(object sender, RoutedEventArgs e)
         {
-            string nextAbf = GetPathAdjacentAbf(abf.info.filePath, nextAbf: true);
+            string nextAbf = GetPathAdjacentAbf(abf.Path, nextAbf: true);
             if (nextAbf != null)
                 LoadAbf(nextAbf);
         }
