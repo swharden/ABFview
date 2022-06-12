@@ -5,4 +5,4 @@
 ![](dev/screenshot.png)
 
 ### Download
-* A click-to-run EXE (zipped) is available on the [Releases page](**https://github.com/swharden/ABFview/releases**)
+* A click-to-run EXE (zipped) is available on the [**Releases page**](https://github.com/swharden/ABFview/releases)
