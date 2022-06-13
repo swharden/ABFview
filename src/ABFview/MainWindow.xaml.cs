@@ -32,13 +32,21 @@ public partial class MainWindow : Window
 
     public void LoadAbf(string filePath)
     {
-        Abf = new AbfSharp.ABF(filePath);
+        try
+        {
+            Abf = new AbfSharp.ABF(filePath);
+            Title = $"ABFview {System.IO.Path.GetFileName(filePath)}";
+            SetSweep(0);
+            string initialViewMode = IsGapFree(Abf) ? "gapfree" : "sweep";
+            SetViewMode(initialViewMode);
+        }
+        catch
+        {
+            Abf = null;
+            Title = "ABF ERROR";
+            wpfPlot1.Plot.Clear();
+        }
 
-        Title = $"ABFview {System.IO.Path.GetFileName(filePath)}";
-
-        SetSweep(0);
-        string initialViewMode = IsGapFree(Abf) ? "gapfree" : "sweep";
-        SetViewMode(initialViewMode);
     }
 
     private void SetSweep(int sweepNumber = 1)
