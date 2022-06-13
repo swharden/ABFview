@@ -89,4 +89,21 @@ public static class EphysPlot
         const int GAP_FREE_MODE = 3;
         return abf.Header.nOperationMode == GAP_FREE_MODE;
     }
+
+    public static void SaveCSV(ScottPlot.Plot plot, string filePath)
+    {
+        var sigplots = plot.GetPlottables().OfType<ScottPlot.Plottable.SignalPlot>();
+        if (!sigplots.Any())
+            return;
+
+        ScottPlot.Plottable.SignalPlot sig = sigplots.First();
+        System.Text.StringBuilder sb = new();
+        for (int i=0; i<sig.Ys.Length; i++)
+        {
+            double x = i / sig.SampleRate;
+            sb.AppendLine($"{x:0.000000}, {sig.Ys[i]}");
+        }
+
+        System.IO.File.WriteAllText(filePath, sb.ToString());
+    }
 }

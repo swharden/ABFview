@@ -16,13 +16,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-
-        gbSweepNav.Visibility = Visibility.Collapsed;
-        gbStackSettings.Visibility = Visibility.Collapsed;
-        gbView.Visibility = Visibility.Collapsed;
-
-        wpfPlot1.Plot.AxisAuto();
-        wpfPlot1.Render();
+        HideAllOptionalGroupBoxes();
 
         string demoAbfFolder = System.IO.Path.GetFullPath("../../../../../dev/abfs/");
         string demoAbfFile = System.IO.Path.Combine(demoAbfFolder, "ic-ramp-ap.abf");
@@ -101,6 +95,14 @@ public partial class MainWindow : Window
         wpfPlot1.Render();
     }
 
+    private void HideAllOptionalGroupBoxes()
+    {
+        gbSweepNav.Visibility = Visibility.Collapsed;
+        gbStackSettings.Visibility = Visibility.Collapsed;
+        gbView.Visibility = Visibility.Collapsed;
+        gbExport.Visibility = Visibility.Collapsed;
+    }
+
     private void SetViewMode(string viewMode = null)
     {
         if (wpfPlot1 is null)
@@ -109,18 +111,15 @@ public partial class MainWindow : Window
         if (viewMode is null)
             viewMode = cbView.Text;
 
-        // start by hiding all custom panels
-        gbSweepNav.Visibility = Visibility.Collapsed;
-        gbStackSettings.Visibility = Visibility.Collapsed;
-        gbView.Visibility = Visibility.Collapsed;
+        HideAllOptionalGroupBoxes();
 
-        // reveal relevant panels only
         switch (viewMode)
         {
             case "sweep":
                 SetSweep();
                 gbSweepNav.Visibility = Visibility.Visible;
                 gbView.Visibility = Visibility.Visible;
+                gbExport.Visibility = Visibility.Visible;
                 break;
 
             case "stack":
@@ -132,10 +131,12 @@ public partial class MainWindow : Window
             case "full":
                 SetFull();
                 gbView.Visibility = Visibility.Visible;
+                gbExport.Visibility = Visibility.Visible;
                 break;
 
             case "gapfree":
                 SetFull();
+                gbExport.Visibility = Visibility.Visible;
                 break;
 
             default:
@@ -218,5 +219,19 @@ public partial class MainWindow : Window
     {
         const int GAP_FREE_MODE = 3;
         return abf.Header.nOperationMode == GAP_FREE_MODE;
+    }
+
+    private void btnExportCsv_Click(object sender, RoutedEventArgs e)
+    {
+        Microsoft.Win32.SaveFileDialog saveFileDialog = new()
+        {
+            FileName = System.IO.Path.GetFileNameWithoutExtension(Abf.Path) + ".csv",
+            Filter = "Comma separated values (*.csv)|*.csv",
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            EphysPlot.SaveCSV(wpfPlot1.Plot, saveFileDialog.FileName);
+        }
     }
 }

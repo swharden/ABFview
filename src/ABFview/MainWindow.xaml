@@ -88,6 +88,12 @@
                 </StackPanel>
             </GroupBox>
 
+            <GroupBox Name="gbExport" Header="Export">
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="btnExportCsv" Content="📝" ToolTip="CSV" Click="btnExportCsv_Click"/>
+                </StackPanel>
+            </GroupBox>
+
         </StackPanel>
 
         <ScottPlot:WpfPlot Grid.Row="1" Name="wpfPlot1"/>
