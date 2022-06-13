@@ -11,6 +11,8 @@ public partial class MainWindow : Window
 {
     AbfSharp.ABF Abf;
 
+    int CurrentSweep = 0;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -28,7 +30,7 @@ public partial class MainWindow : Window
             LoadAbf(demoAbfFile);
     }
 
-    private void LoadAbf(string filePath)
+    public void LoadAbf(string filePath)
     {
         Abf = new AbfSharp.ABF(filePath);
 
@@ -39,11 +41,9 @@ public partial class MainWindow : Window
         SetViewMode(initialViewMode);
     }
 
-    int currentSweep = 0;
-
     private void SetSweep(int sweepNumber = 1)
     {
-        currentSweep = sweepNumber;
+        CurrentSweep = sweepNumber;
         EphysPlot.Sweep(wpfPlot1.Plot, Abf, sweepNumber, (bool)cbDerivative.IsChecked);
         wpfPlot1.Render();
         lblSweep.Content = $"{sweepNumber + 1} of {Abf.Header.SweepCount}";
@@ -66,12 +66,12 @@ public partial class MainWindow : Window
 
     private void btnSweepPrevious_Click(object sender, RoutedEventArgs e)
     {
-        SetSweep(Math.Max(0, currentSweep - 1));
+        SetSweep(Math.Max(0, CurrentSweep - 1));
     }
 
     private void btnSweepNext_Click(object sender, RoutedEventArgs e)
     {
-        SetSweep(Math.Min(Abf.Header.SweepCount - 1, currentSweep + 1));
+        SetSweep(Math.Min(Abf.Header.SweepCount - 1, CurrentSweep + 1));
     }
 
     private void btnSweepFirst_Click(object sender, RoutedEventArgs e)
