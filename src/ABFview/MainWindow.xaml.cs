@@ -18,8 +18,6 @@ public partial class MainWindow : Window
         gbSweepNav.Visibility = Visibility.Collapsed;
         gbStackSettings.Visibility = Visibility.Collapsed;
         gbView.Visibility = Visibility.Collapsed;
-        btnNextAbf.Visibility = Visibility.Collapsed;
-        btnPreviousAbf.Visibility = Visibility.Collapsed;
 
         wpfPlot1.Plot.AxisAuto();
         wpfPlot1.Render();
@@ -35,12 +33,10 @@ public partial class MainWindow : Window
         Abf = new AbfSharp.ABF(filePath);
 
         Title = $"ABFview {System.IO.Path.GetFileName(filePath)}";
-        SetViewMode("sweep");
-        SetSweep(0);
 
-        gbView.Visibility = Visibility.Visible;
-        btnNextAbf.Visibility = Visibility.Visible;
-        btnPreviousAbf.Visibility = Visibility.Visible;
+        SetSweep(0);
+        string initialViewMode = IsGapFree(Abf) ? "gapfree" : "sweep";
+        SetViewMode(initialViewMode);
     }
 
     int currentSweep = 0;
@@ -108,6 +104,7 @@ public partial class MainWindow : Window
         // start by hiding all custom panels
         gbSweepNav.Visibility = Visibility.Collapsed;
         gbStackSettings.Visibility = Visibility.Collapsed;
+        gbView.Visibility = Visibility.Collapsed;
 
         // reveal relevant panels only
         switch (viewMode)
@@ -115,14 +112,21 @@ public partial class MainWindow : Window
             case "sweep":
                 SetSweep();
                 gbSweepNav.Visibility = Visibility.Visible;
+                gbView.Visibility = Visibility.Visible;
                 break;
 
             case "stack":
                 SetStack();
                 gbStackSettings.Visibility = Visibility.Visible;
+                gbView.Visibility = Visibility.Visible;
                 break;
 
             case "full":
+                SetFull();
+                gbView.Visibility = Visibility.Visible;
+                break;
+
+            case "gapfree":
                 SetFull();
                 break;
 
@@ -200,5 +204,11 @@ public partial class MainWindow : Window
             if (files[0].ToUpper().EndsWith("ABF"))
                 LoadAbf(files[0]);
         }
+    }
+
+    public static bool IsGapFree(AbfSharp.ABF abf)
+    {
+        const int GAP_FREE_MODE = 3;
+        return abf.Header.nOperationMode == GAP_FREE_MODE;
     }
 }

@@ -9,12 +9,12 @@ public static class EphysPlot
     {
         plt.Clear();
 
-        plt.AddSignal(
-            ys: GetSweepValues(abf, sweepNumber, derivative),
-            sampleRate: abf.Header.SampleRate,
-            color: derivative ? Color.Red : Color.Blue);
+        double[] values = GetSweepValues(abf, sweepNumber, derivative);
+        Color color = derivative ? Color.Red : Color.Blue;
+        plt.AddSignal(values, abf.Header.SampleRate, color);
 
-        plt.Title($"Sweep {sweepNumber + 1} of {abf.Header.SweepCount}");
+        string title = IsGapFree(abf) ? "Full Gap-Free Recording" : $"Sweep {sweepNumber + 1} of {abf.Header.SweepCount}";
+        plt.Title(title);
         plt.XLabel("Sweep Time (seconds)");
         plt.AxisAuto(0, .1);
     }
@@ -41,13 +41,10 @@ public static class EphysPlot
     public static void Full(ScottPlot.Plot plt, AbfSharp.ABF abf, bool derivative)
     {
         plt.Clear();
-
-        plt.AddSignal(
-            ys: GetAllSweepValues(abf, derivative),
-            abf.Header.SampleRate * 60,
-            color: derivative ? Color.Red : Color.Blue);
-
-        plt.XLabel("Sweep Time (minutes)");
+        double[] values = GetAllSweepValues(abf, derivative);
+        Color color = derivative ? Color.Red : Color.Blue;
+        plt.AddSignal(values, abf.Header.SampleRate * 60, color);
+        plt.XLabel("Time (minutes)");
         plt.Title($"Full Recording");
         plt.AxisAuto(0, .1);
     }
@@ -73,6 +70,11 @@ public static class EphysPlot
 
     private static double[] GetAllSweepValues(AbfSharp.ABF abf, bool derivative)
     {
+        if (IsGapFree(abf))
+        {
+            return GetSweepValues(abf, 0, derivative);
+        }
+
         double[][] values = new double[abf.Header.SweepCount][];
         for (int i = 0; i < abf.Header.SweepCount; i++)
         {
@@ -80,5 +82,11 @@ public static class EphysPlot
         }
 
         return values.SelectMany(a => a).ToArray();
+    }
+
+    public static bool IsGapFree(AbfSharp.ABF abf)
+    {
+        const int GAP_FREE_MODE = 3;
+        return abf.Header.nOperationMode == GAP_FREE_MODE;
     }
 }
