@@ -15,6 +15,7 @@ public static class EphysPlot
 
         string title = IsGapFree(abf) ? "Full Gap-Free Recording" : $"Sweep {sweepNumber + 1} of {abf.Header.SweepCount}";
         plt.Title(title);
+        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})");
         plt.XLabel("Sweep Time (seconds)");
         plt.AxisAuto(0, .1);
     }
@@ -34,6 +35,7 @@ public static class EphysPlot
         }
 
         plt.Title($"Stacked Sweeps");
+        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})");
         plt.XLabel("Sweep Time (seconds)");
         plt.AxisAuto(0, .1);
     }
@@ -41,10 +43,11 @@ public static class EphysPlot
     public static void Full(ScottPlot.Plot plt, AbfSharp.ABF abf, bool derivative)
     {
         plt.Clear();
-        double[] values = GetAllSweepValues(abf, derivative);
+        double[] values = GetFullRecording(abf, derivative);
         Color color = derivative ? Color.Red : Color.Blue;
         plt.AddSignal(values, abf.Header.SampleRate * 60, color);
         plt.XLabel("Time (minutes)");
+        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})");
         plt.Title($"Full Recording");
         plt.AxisAuto(0, .1);
     }
@@ -68,7 +71,7 @@ public static class EphysPlot
         return derivative ? Diff(values) : values;
     }
 
-    private static double[] GetAllSweepValues(AbfSharp.ABF abf, bool derivative)
+    private static double[] GetFullRecording(AbfSharp.ABF abf, bool derivative)
     {
         if (IsGapFree(abf))
         {
@@ -90,18 +93,20 @@ public static class EphysPlot
         return abf.Header.nOperationMode == GAP_FREE_MODE;
     }
 
-    public static void SaveCSV(ScottPlot.Plot plot, string filePath)
+    public static void SaveCSV(AbfSharp.ABF abf, string filePath)
     {
-        var sigplots = plot.GetPlottables().OfType<ScottPlot.Plottable.SignalPlot>();
-        if (!sigplots.Any())
-            return;
+        string yName = $"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})";
+        string xName = "Time (seconds)";
+        double[] ys = GetFullRecording(abf, false);
 
-        ScottPlot.Plottable.SignalPlot sig = sigplots.First();
         System.Text.StringBuilder sb = new();
-        for (int i=0; i<sig.Ys.Length; i++)
+
+        sb.AppendLine($"\"{xName}\", \"{yName}\"");
+
+        for (int i = 0; i < ys.Length; i++)
         {
-            double x = i / sig.SampleRate;
-            sb.AppendLine($"{x:0.000000}, {sig.Ys[i]}");
+            double x = i / abf.Header.SampleRate;
+            sb.AppendLine($"{x:0.000000}, {ys[i]}");
         }
 
         System.IO.File.WriteAllText(filePath, sb.ToString());

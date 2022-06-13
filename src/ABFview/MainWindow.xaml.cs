@@ -126,6 +126,7 @@ public partial class MainWindow : Window
                 SetStack();
                 gbStackSettings.Visibility = Visibility.Visible;
                 gbView.Visibility = Visibility.Visible;
+                gbExport.Visibility = Visibility.Visible;
                 break;
 
             case "full":
@@ -231,7 +232,7 @@ public partial class MainWindow : Window
 
         if (saveFileDialog.ShowDialog() == true)
         {
-            EphysPlot.SaveCSV(wpfPlot1.Plot, saveFileDialog.FileName);
+            EphysPlot.SaveCSV(Abf, saveFileDialog.FileName);
         }
     }
 }
