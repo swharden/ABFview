@@ -194,6 +194,9 @@ public partial class MainWindow : Window
 
     private void btnPreviousAbf_Click(object sender, RoutedEventArgs e)
     {
+        if (Abf is null)
+            return;
+
         string previousAbf = GetPathAdjacentAbf(Abf.Path, nextAbf: false);
         if (previousAbf != null)
             LoadAbf(previousAbf);
@@ -201,6 +204,9 @@ public partial class MainWindow : Window
 
     private void btnNextAbf_Click(object sender, RoutedEventArgs e)
     {
+        if (Abf is null)
+            return;
+
         string nextAbf = GetPathAdjacentAbf(Abf.Path, nextAbf: true);
         if (nextAbf != null)
             LoadAbf(nextAbf);
