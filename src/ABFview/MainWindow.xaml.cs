@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -13,10 +14,16 @@ public partial class MainWindow : Window
 
     int CurrentSweep = 0;
 
+    private string Version => Assembly.GetEntryAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            .InformationalVersion;
+
     public MainWindow()
     {
         InitializeComponent();
         HideAllOptionalGroupBoxes();
+
+        Title = $"ABFview {Version}";
 
         string demoAbfFolder = System.IO.Path.GetFullPath("../../../../../dev/abfs/");
         string demoAbfFile = System.IO.Path.Combine(demoAbfFolder, "ic-ramp-ap.abf");
@@ -29,7 +36,7 @@ public partial class MainWindow : Window
         try
         {
             Abf = new AbfSharp.ABF(filePath);
-            Title = $"ABFview {System.IO.Path.GetFileName(filePath)}";
+            Title = $"ABFview {Version} - {System.IO.Path.GetFileName(filePath)}";
             SetSweep(0);
             string initialViewMode = IsGapFree(Abf) ? "gapfree" : "sweep";
             SetViewMode(initialViewMode);
@@ -37,7 +44,7 @@ public partial class MainWindow : Window
         catch
         {
             Abf = null;
-            Title = "ABF ERROR";
+            Title = $"ABFview {Version} - ABF ERROR";
             wpfPlot1.Plot.Clear();
         }
 
