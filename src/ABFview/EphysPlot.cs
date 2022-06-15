@@ -14,8 +14,10 @@ public static class EphysPlot
         plt.AddSignal(values, abf.Header.SampleRate, color);
 
         string title = IsGapFree(abf) ? "Full Gap-Free Recording" : $"Sweep {sweepNumber + 1} of {abf.Header.SweepCount}";
+        string units = derivative ? abf.Header.sADCUnits[0] + "/ms" : abf.Header.sADCUnits[0];
+
         plt.Title(title);
-        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})");
+        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({units})");
         plt.XLabel("Sweep Time (seconds)");
         plt.AxisAuto(0, .1);
     }
@@ -35,7 +37,9 @@ public static class EphysPlot
         }
 
         plt.Title($"Stacked Sweeps");
-        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})");
+
+        string units = derivative ? abf.Header.sADCUnits[0] + "/ms" : abf.Header.sADCUnits[0];
+        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({units})");
         plt.XLabel("Sweep Time (seconds)");
         plt.AxisAuto(0, .1);
     }
@@ -47,16 +51,17 @@ public static class EphysPlot
         Color color = derivative ? Color.Red : Color.Blue;
         plt.AddSignal(values, abf.Header.SampleRate * 60, color);
         plt.XLabel("Time (minutes)");
-        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({abf.Header.sADCUnits[0]})");
+        string units = derivative ? abf.Header.sADCUnits[0] + "/ms" : abf.Header.sADCUnits[0];
+        plt.YLabel($"{abf.Header.sADCChannelName[0]} ({units})");
         plt.Title($"Full Recording");
         plt.AxisAuto(0, .1);
     }
 
-    private static double[] Diff(double[] source, int deltaPoints = 1)
+    private static double[] Diff(double[] source, double scale = 1, int deltaPoints = 1)
     {
         double[] deriv = new double[source.Length];
         for (int i = deltaPoints; i < source.Length; i++)
-            deriv[i] = source[i] - source[i - deltaPoints];
+            deriv[i] = (source[i] - source[i - deltaPoints]) * scale;
         for (int i = 0; i < deltaPoints; i++)
             deriv[i] = deriv[deltaPoints];
         return deriv;
@@ -68,7 +73,7 @@ public static class EphysPlot
         double[] values = new double[valuesRaw.Length];
         for (int i = 0; i < valuesRaw.Length; i++)
             values[i] = valuesRaw[i];
-        return derivative ? Diff(values) : values;
+        return derivative ? Diff(values, abf.Header.SampleRate / 1000) : values;
     }
 
     private static double[] GetFullRecording(AbfSharp.ABF abf, bool derivative)
