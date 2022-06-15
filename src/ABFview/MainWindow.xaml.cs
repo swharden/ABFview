@@ -248,4 +248,13 @@ public partial class MainWindow : Window
             EphysPlot.SaveCSV(Abf, saveFileDialog.FileName);
         }
     }
+
+    private void Window_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            LoadAbf(files[0]);
+        }
+    }
 }

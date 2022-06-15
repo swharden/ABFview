@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ABFview"
         xmlns:ScottPlot="clr-namespace:ScottPlot;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
+        Drop="Window_Drop"
         Title="ABFview" Height="450" Width="800">
 
     <Grid AllowDrop="True" Drop="OnDrop">
