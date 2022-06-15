@@ -123,7 +123,7 @@ public partial class MainWindow : Window
         switch (viewMode)
         {
             case "sweep":
-                SetSweep();
+                SetSweep(CurrentSweep);
                 gbSweepNav.Visibility = Visibility.Visible;
                 gbView.Visibility = Visibility.Visible;
                 gbExport.Visibility = Visibility.Visible;
